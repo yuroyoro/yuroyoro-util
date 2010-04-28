@@ -1,4 +1,4 @@
-package com.yuroyoro.util
+package com.yuroyoro.util.net
 
 import scala.io.Source
 import java.io.PrintStream
@@ -9,8 +9,6 @@ class HttpConnection( url:String ){
   val GET = "GET"
 
   val u = (new URL( url)).openConnection.asInstanceOf[HttpURLConnection]
-
-  private def encode( s:String ) = URLEncoder.encode( s, "UTF-8" )
 
   def method( m:String ) = {
     u.setRequestMethod( m )

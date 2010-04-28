@@ -1,8 +1,6 @@
-package com.yuroyoro.util
+package com.yuroyoro
 
-import scala.xml.NodeSeq
-
-object YPreDef {
+package object util {
   type -->[A, B]  = PartialFunction[A, B]
   type Source = scala.io.Source
   type Regex = scala.util.matching.Regex
@@ -12,7 +10,6 @@ object YPreDef {
   type Calendar = java.util.Calendar
   type Date = java.util.Date
 
-  implicit def nodeSeq2HtmlNodeSeq( xml:NodeSeq ) = new HtmlNodeSeq( xml )
   implicit def option2OptionEx[A]( o:Option[A] ) = new OptionEx( o )
 }
 

@@ -1,4 +1,4 @@
-package com.yuroyoro.util
+package com.yuroyoro.util.net
 
 object Base64 {
   import scala.math._

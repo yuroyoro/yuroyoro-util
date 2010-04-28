@@ -1,4 +1,4 @@
-package com.yuroyoro.util
+package com.yuroyoro.util.io
 
 import scala.io.Source
 import scala.xml.NodeSeq

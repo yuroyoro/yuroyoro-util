@@ -1,4 +1,4 @@
-package com.yuroyoro.util
+package com.yuroyoro.util.net
 import scala.xml._
 
 object HtmlNode {

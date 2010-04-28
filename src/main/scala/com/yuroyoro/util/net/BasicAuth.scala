@@ -1,3 +1,4 @@
+package com.yuroyoro.util.net
 
 object BasicAuth {
   import java.net.{Authenticator,  PasswordAuthentication}
