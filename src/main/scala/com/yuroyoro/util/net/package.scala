@@ -18,6 +18,10 @@ package object net {
   // }
   def normalize( url:String ) = (new URI( url)).normalize.toString
 
+  def formatURL[A,B]( url:String, params:Map[A,B] = Map.empty[A,B] ) = {
+    if( params.nonEmpty ) url + ( if( url.contains('?')) "&" else "?" ) + params.toQueryStrings
+    else url
+  }
 
   def queryStrings[A,B]( params:(A,B) *) =
     params.map{ case ( k, v ) => "%s=%s" format(k,v) }.toList.mkString("&")
