@@ -1,7 +1,7 @@
 package com.yuroyoro.util
 
 import scala.xml.NodeSeq
-import java.net.{URL,URI,HttpURLConnection,URLEncoder}
+import java.net.{HttpURLConnection,URLEncoder}
 
 package object net {
 
@@ -16,7 +16,7 @@ package object net {
   //   val encoder = new sun.misc.BASE64Encoder
   //   encoder.encode( bytes(p) )
   // }
-  def normalize( url:String ) = (new URI( url)).normalize.toString
+  def normalize( url:String ) = (new URI( url )).normalize.toString
 
   def formatURL[A,B]( url:String, params:Map[A,B] = Map.empty[A,B] ) = {
     if( params.nonEmpty ) url + ( if( url.contains('?')) "&" else "?" ) + params.toQueryStrings

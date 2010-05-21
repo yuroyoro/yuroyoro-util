@@ -46,7 +46,6 @@ trait PathSeq[A <:Path] extends immutable.Seq[A]
 
   def traverse( f: Path => Unit ) = retrieval.foreach( f )
   def retrieve[A]( f: Path => A ) = retrieval.map( f )
-  override def toString = theSeq.mkString
 }
 
 trait FileProxy {
@@ -108,7 +107,6 @@ object Path {
   def apply( file:JFile ):Path = {
     if( file.isDirectory ) Directory( file ) else File( file )
   }
-  override def toString = file.getName
 }
 
 case class File( file:JFile ) extends Path( file ) {
@@ -120,7 +118,7 @@ object File {
   def apply( path:String ) = new File( Path.toJFile( path ))
 }
 
-case class Directory( private file:JFile ) extends Path( file ) with PathSeq[Path] {
+case class Directory( file:JFile ) extends Path( file ) with PathSeq[Path] {
   override def toString = "%s:(%d)" format( file.getName, theSeq.length )
 }
 
@@ -128,7 +126,7 @@ object Directory {
   def apply( path:String ) = new Directory( Path.toJFile( path ))
 }
 
-case class NewPath( private file:JFile ) extends Path( file ) {
+case class NewPath( file:JFile ) extends Path( file ) {
   def mkdir = {
     self.mkdir
     Directory( self )
@@ -137,7 +135,7 @@ case class NewPath( private file:JFile ) extends Path( file ) {
     self.mkdirs
     Directory( self )
   }
-  def createNewFile = {
+  def create = {
     self.createNewFile
     File( self )
   }

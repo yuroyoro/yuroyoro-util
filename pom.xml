@@ -25,7 +25,7 @@
   </developers>
 
   <properties>
-    <scala.version>2.8.0.Beta1</scala.version>
+    <scala.version>2.8.0.RC2</scala.version>
   </properties>
 
   <repositories>
