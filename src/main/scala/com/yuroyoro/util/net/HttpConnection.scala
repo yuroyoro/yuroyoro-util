@@ -1,7 +1,8 @@
 package com.yuroyoro.util.net
 
+import com.yuroyoro.util._
 import scala.io.Source
-import java.io.PrintStream
+import java.io.{InputStream, PrintStream}
 import java.net.{URL,HttpURLConnection,URLEncoder}
 
 abstract class HttpMethod
@@ -26,18 +27,35 @@ class HttpConnection( url:String ){
   }
 
   def body( content:String ) = {
-    u.setDoOutput( true )
-    val os = u.getOutputStream()
-    val ps = new PrintStream(os)
-    ps.print( content )
-    ps.close()
+    if( content.nonEmpty ) {
+      u.setDoOutput( true )
+      val os = u.getOutputStream()
+      val ps = new PrintStream(os)
+      ps.print( content )
+      os.close
+      ps.close
+    }
     this
   }
 
-  def inputStream = u.getInputStream
+  def body( content:Array[Byte] ) = {
+    u.setDoOutput( true )
+    val os = u.getOutputStream()
+    val ps = new PrintStream(os)
+    ps.write( content )
+    os.close
+    ps.close
+    this
+  }
 
-  def asSource = {
-    val in = inputStream
-    Source.fromInputStream( in )
+  def inputStream:Option[InputStream] = tryo{
+      u.getInputStream
+    }{ t => {
+      println( "%s:%s" format(u.getResponseCode , u.getResponseMessage ) )
+      None
+    }}
+
+  def asSource:Option[Source]= {
+    inputStream.map{ in => Source.fromInputStream( in ) }
   }
 }

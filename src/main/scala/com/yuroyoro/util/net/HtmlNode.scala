@@ -9,6 +9,7 @@ object HtmlNode {
 
 class HtmlNodeSeq( xml:NodeSeq ) {
 
+  def attr( attribute:String ) = xml \ ("@" + attribute)
   def class_?(className:String ) = xml filter{ e => HtmlNode.styleClasses(e).contains(className) }
 
   def id_?( targetId:String ) = xml filter{ e => HtmlNode.id(e) == targetId }

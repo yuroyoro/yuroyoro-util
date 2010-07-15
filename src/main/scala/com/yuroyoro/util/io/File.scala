@@ -1,9 +1,11 @@
 package com.yuroyoro.util.io
 
-import java.io.{File => JFile }
+// import java.io.{ File => JFile }
+import java.io.{Writer, OutputStreamWriter, FileOutputStream }
 import collection.{ mutable, immutable, generic, SeqLike }
 import mutable.{ Builder, ListBuffer }
 import generic.{ GenericTraversableTemplate,SeqFactory,  CanBuildFrom }
+import scala.io.{Source, Codec}
 
 object PathSeq {
   final val Empty = fromSeq(Nil)
@@ -40,9 +42,11 @@ trait PathSeq[A <:Path] extends immutable.Seq[A]
   def dirs = collect{ case d:Directory => d }
 
   def retrieval:PathSeq[Path] = flatMap{
-    case file:File => file
+    case file:File => file :: Nil
     case dir:Directory => dir +: dir.retrieval
   }
+
+  def search( f: Path => Boolean ):PathSeq[Path] = retrieval.filter( f )
 
   def traverse( f: Path => Unit ) = retrieval.foreach( f )
   def retrieve[A]( f: Path => A ) = retrieval.map( f )
@@ -102,10 +106,14 @@ object Path {
 
   def apply( path:String ):Path = {
     val f = toJFile( path )
-    if( f.isDirectory ) Directory( f ) else File( f )
+    if( f.exists )
+      if( f.isDirectory ) Directory( f ) else File( f )
+    else NewPath( f )
   }
   def apply( file:JFile ):Path = {
-    if( file.isDirectory ) Directory( file ) else File( file )
+    if( file.exists )
+      if( file.isDirectory ) Directory( file ) else File( file )
+    else NewPath( file )
   }
 }
 
@@ -113,13 +121,40 @@ case class File( file:JFile ) extends Path( file ) {
   override def theSeq = Seq.empty[Path]
 
   def filesize = file.length
+
+  def source(implicit codec: Codec = Codec.default) = Source.fromFile( path )
+
+  def lines:Iterator[String] =
+    source().getLines
+
+  def os:Writer =
+    new OutputStreamWriter( new FileOutputStream( file ), "UTF-8")
+
+  def >> ( content:String ) = {
+    val o = os
+    o.write( content )
+    o.flush
+    o.close
+    this
+  }
+
+  def >> ( content: => Seq[String] )= {
+    val o = os
+    content.foreach { c => o.write( c + "\n" ) }
+    o.flush
+    o.close
+    this
+  }
 }
+
 object File {
   def apply( path:String ) = new File( Path.toJFile( path ))
 }
 
 case class Directory( file:JFile ) extends Path( file ) with PathSeq[Path] {
   override def toString = "%s:(%d)" format( file.getName, theSeq.length )
+
+  def / ( dir:String ) = Path( new JFile( file.getPath, dir ) )
 }
 
 object Directory {
@@ -138,6 +173,18 @@ case class NewPath( file:JFile ) extends Path( file ) {
   def create = {
     self.createNewFile
     File( self )
+  }
+
+  def >> ( content:String ) = {
+    val nf = create
+    nf >> content
+    nf
+  }
+
+  def >> ( content: => Seq[String] )= {
+    val nf = create
+    nf >> content
+    nf
   }
 }
 object NewPath {

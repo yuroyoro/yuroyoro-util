@@ -10,7 +10,7 @@ package object io {
 
   def source( url:String )(implicit codec: Codec = Codec.default) =
     if( url.contains(':') ) Source.fromURL( new java.net.URL(url) )
-    else Source.fromPath( url )
+    else Source.fromFile( url )
 
   def loadXml( url:String ) =
     if( url.contains(':') ) XML.load( new java.net.URL(url))

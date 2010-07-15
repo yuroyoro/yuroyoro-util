@@ -12,7 +12,7 @@ class Image( val image:BufferedImage ) {
     val bos =  new ByteArrayOutputStream
     val os = new BufferedOutputStream(bos)
     image.flush
-    ImageIO.write(image, format, os);
+    ImageIO.write(image, format, os)
     os.flush
     os.close
     bos.toByteArray

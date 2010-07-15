@@ -11,6 +11,7 @@ package object util {
   type Date = java.util.Date
   type URL = java.net.URL
   type URI = java.net.URI
+  type JFile = java.io.File
   type HttpConnection = java.net.HttpURLConnection
   type Writer = java.io.Writer
   type Reader = java.io.Reader
