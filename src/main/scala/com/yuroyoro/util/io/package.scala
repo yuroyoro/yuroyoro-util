@@ -16,7 +16,7 @@ package object io {
     if( url.contains(':') ) XML.load( new java.net.URL(url))
     else XML.loadFile( url )
 
-  def loadXHtml( url:String ) = XhtmlParser( SourceEx( url ))
+  def loadXHtml( url:String ) = XhtmlParser( source( url ))
 
   def toByteArray( in:InputStream ) = {
     val buf = new Array[Byte](1024)

@@ -3,16 +3,18 @@ package com.yuroyoro.util.net
 import scala.collection.immutable.TreeMap
 import scala.io.Source
 import javax.crypto
+import java.io.InputStream
 import java.net.{URL,URI,HttpURLConnection,URLEncoder}
 
 trait OAuth {
   val consumer:Consumer
-  val emptyParam = Map.empty[String,  String]
+  val emptyParam = Map.empty[String, String]
 
   val method:HttpMethod = HttpPost
   val useAuthorizationHeader:Boolean = true
   val signatureMethod:String = "HmacSHA1"
   val signatureMethodName:String = "HMAC-SHA1"
+  val realm:Option[String] = None
   val oauthVersion = "1.0"
 
   implicit val defaultURLEncodingSpec = RFC3986
@@ -26,7 +28,13 @@ trait OAuth {
     oauthHeaderParams:Map[String, String] = emptyParam,
     token:Option[Token] = None, verifier: Option[String] = None,
     requestMethod:HttpMethod = method,
-    useHeader:Boolean = useAuthorizationHeader ):Option[Source] = {
+    useHeader:Boolean = useAuthorizationHeader ):Option[Source] = connect( url, params, oauthHeaderParams, token, verifier, requestMethod, useHeader).asSource
+
+  def connect ( url:String, params:Map[String, String] = emptyParam,
+    oauthHeaderParams:Map[String, String] = emptyParam,
+    token:Option[Token] = None, verifier: Option[String] = None,
+    requestMethod:HttpMethod = method,
+    useHeader:Boolean = useAuthorizationHeader ):HttpConnection = {
 
     val oauthParams = {
       val op = Map(
@@ -55,57 +63,59 @@ trait OAuth {
       TreeMap( (op + ("oauth_signature" -> sig)).toSeq : _* )
     }
 
-    // println( "----- Params -----------" )
-    // println( params )
-    // println( "----- OAuth Params -----------" )
-    // println( oauthParams )
+    println( "----- Params -----------" )
+    println( params )
+    println( "----- OAuth Params -----------" )
+    println( oauthParams )
 
     requestMethod match {
       case HttpPost =>
         if( useHeader ) {
-          val authorizationHeader = "OAuth %s" format( oauthParams.map{ case (k, v) =>
-              "%s=\"%s\"" format( k, encodeURL( v ) ) }.mkString(", "))
+          val authorizationHeader = "OAuth %s%s" format(
+            realm.map{ r => "realm=\"%s\", ".format(r) }.getOrElse(""),
+            oauthParams.map{ case (k, v) => "%s=\"%s\"" format( k, encodeURL( v ) ) }.mkString(", "))
           val qs = params.toQueryStrings
 
-          // println( "----- Authorization header -----------" )
-          // println( authorizationHeader )
-          // println( "----- body -----------" )
-          // println( qs )
+          println( "----- Authorization header -----------" )
+          println( authorizationHeader )
+          println( "----- body -----------" )
+          println( qs )
 
           new HttpConnection( url )
             .method( requestMethod )
-            .param( "Content-Type" -> "application/x-www-form-urlencoded")
-            .param( "Authorization" -> authorizationHeader )
-            .param( "Content-Length" -> qs.length.toString )
+            .header( "Content-Type" -> "application/x-www-form-urlencoded")
+            .header( "Authorization" -> authorizationHeader )
+            .header( "User-Agent" -> "YuroyoroStreaming/1.0")
             .body( qs )
-            .asSource
         }
         else{
           val qs = ( oauthParams ++ params ).toQueryStrings
 
           new HttpConnection( url )
             .method( requestMethod )
-            .param( "Content-Length" -> qs.length.toString )
+            .header( "User-Agent" -> "YuroyoroStreaming/1.0")
             .body( qs )
-            .asSource
         }
       case _ =>
         if( useHeader ) {
-          val authorizationHeader =
-            "OAuth %s" format( oauthParams.map{ case (k, v) => "%s=\"%s\"" format( k, v ) }.mkString(","))
+          val authorizationHeader = "OAuth %s%s" format(
+            realm.map{ r => "realm=\"%s\", ".format(r) }.getOrElse(""),
+            oauthParams.map{ case (k, v) => "%s=\"%s\"" format( k, encodeURL( v ) ) }.mkString(", "))
           val qs = params.toQueryStrings
+
+          println( "----- Authorization header -----------" )
+          println( authorizationHeader )
 
           new HttpConnection( formatURL( url , params ) )
             .method( requestMethod )
-            .param( "Authorization" -> authorizationHeader )
-            .asSource
+            .header( "Authorization" -> authorizationHeader )
+            .header( "User-Agent" -> "YuroyoroStreaming/1.0")
         }
         else{
           val qs = (oauthParams ++ params).toQueryStrings
 
           new HttpConnection( formatURL( url , (oauthParams ++ params) ) )
             .method( requestMethod )
-            .asSource
         }
     }
   }
@@ -137,7 +147,7 @@ abstract class Token extends OAuth {
 }
 
 case class RequestToken( value:String, secret:String, consumer:Consumer,
-  parameters:Map[String,  String]) extends Token {
+  parameters:Map[String, String] = Map.empty[String, String]) extends Token {
 
   def asAccessToken( s:String ):Option[AccessToken] =
     splitToken(s).map{ case (t, sec, m) => AccessToken(t, sec, consumer, m)}
@@ -153,7 +163,7 @@ case class RequestToken( value:String, secret:String, consumer:Consumer,
 }
 
 case class AccessToken( value:String, secret:String,
-  consumer:Consumer, parameters:Map[String, String] ) extends Token {
+  consumer:Consumer, parameters:Map[String, String] = Map.empty[String, String] ) extends Token {
 
   def get( url:String, params:Map[String, String] = Map.empty[String, String],
     verifier:Option[String] = None,
@@ -162,11 +172,18 @@ case class AccessToken( value:String, secret:String,
     oauthRequest( url, params.toEncodedMap, emptyParam, Some(this), verifier, HttpGet, useHeader )
   }
 
+  def getAsStream( url:String, params:Map[String, String] = Map.empty[String, String],
+    verifier:Option[String] = None,
+    useHeader:Boolean = useAuthorizationHeader ):Option[InputStream] = {
+
+    connect( url, params.toEncodedMap, emptyParam, Some(this), verifier, HttpGet, useHeader ).asStream
+  }
+
   def post( url:String, params:Map[String, String] = Map.empty[String, String],
     verifier:Option[String] = None,
     useHeader:Boolean = useAuthorizationHeader ):Option[Source] = {
 
-    oauthRequest( url, params.toEncodedMap, emptyParam, Some(this), verifier, HttpPost, useHeader )
+    oauthRequest( url, params, emptyParam, Some(this), verifier, HttpPost, useHeader )
   }
 
   def request( url:String, params:Map[String, String] = Map.empty[String, String],
