@@ -33,9 +33,7 @@ object Base64 {
   def decode( s:String , charset:String ) = new String( decodeBytes( s ), charset )
 
   def decodeBytes( s:String ) = {
-    val bits = s.map{ BASE64.indexOf(_)}.
-      filter( 0 < ).
-      map{
+    val bits = s.map{ BASE64.indexOf(_)}.filter( 0 <= ).map{
         b => ("000000" + b.toBinaryString).reverse.take(6).reverse
       }.mkString.toList
 
