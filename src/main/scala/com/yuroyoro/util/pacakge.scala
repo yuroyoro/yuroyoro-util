@@ -28,6 +28,7 @@ package object util {
     s.lines.dropWhile{ _.trim.isEmpty}.map{ _.trim }.mkString("\n").replaceAll("\n{3, }",  "\n\n")
 
   implicit def option2OptionEx[A]( o:Option[A] ) = new OptionEx( o )
+  implicit def string2StringEx(s:String) = StringEx(s)
 
   def tryo[T]( f: => T )
              ( implicit onError: Throwable => Option[T] =

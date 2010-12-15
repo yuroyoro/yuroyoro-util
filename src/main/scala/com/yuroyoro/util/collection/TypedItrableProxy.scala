@@ -5,7 +5,7 @@ trait TypedIterableProxy[A, Repr<: Iterable[A]] extends Iterable[A] with Iterabl
   import scala.collection.generic.CanBuildFrom
   import scala.collection.mutable.{ListBuffer, Builder}
   val self:Iterable[A]
-  def newTo(from:List[A]):Repr
+  def newTo(from:Iterable[A]):Repr
 
   def iterator = self.iterator
   override def newBuilder:Builder[A, Repr] = new ListBuffer[A] mapResult {x => newTo(x) }
