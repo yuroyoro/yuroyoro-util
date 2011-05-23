@@ -18,9 +18,9 @@ trait TypedIterableProxy[A, Repr<: Iterable[A]] extends Iterable[A] with Iterabl
 
 /**
 // 特定の型のIterableへProxyするクラス
-case class Src(v:String*) extends Iterable[String] with TypedIterableProxy[String, Src] {
-  val self= v.toSeq
-  def newTo(from:List[String]) = new Src( from:_*)
+class Src(v:String*) extends Iterable[String] with TypedIterableProxy[String, Src] {
+  val self= v.toIterable
+  def newTo(from:Iterable[String]) = new Src( from.toSeq:_*)
   def hoge = map{ "hoge" + }
 }
 val src = Src("aa", "bb", "cc", "abc")
